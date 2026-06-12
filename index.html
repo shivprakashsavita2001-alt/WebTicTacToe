@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Tic-Tac-Toe Smart AI</title>
+    <style>
+        body {
+            background-color: #ff8c00; 
+            color: #222; 
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 { margin-bottom: 5px; font-size: 3em; }
+        .status { font-size: 1.5em; margin-bottom: 20px; font-weight: bold; color: #333; }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+        }
+        
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .cell:hover { background-color: #444; }
+        
+        .x-mark { color: cyan; }
+        .o-mark { color: yellow; }
+        
+        button {
+            margin-top: 30px;
+            padding: 12px 24px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background-color: #222;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:hover { background-color: #444; }
+    </style>
+</head>
+<body>
+
+    <h1>Tic-Tac-Toe</h1>
+    <div class="status" id="status">Aapki baari (X)</div>
+    
+    <div class="board" id="board">
+        <div class="cell" onclick="playerMove(this, 0)"></div>
+        <div class="cell" onclick="playerMove(this, 1)"></div>
+        <div class="cell" onclick="playerMove(this, 2)"></div>
+        <div class="cell" onclick="playerMove(this, 3)"></div>
+        <div class="cell" onclick="playerMove(this, 4)"></div>
+        <div class="cell" onclick="playerMove(this, 5)"></div>
+        <div class="cell" onclick="playerMove(this, 6)"></div>
+        <div class="cell" onclick="playerMove(this, 7)"></div>
+        <div class="cell" onclick="playerMove(this, 8)"></div>
+    </div>
+
+    <button onclick="resetGame()">Game Reset Karein</button>
+
+    <script>
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let isPlayerTurn = true; 
+        let gameActive = true;
+        const statusDisplay = document.getElementById('status');
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        function playerMove(cell, index) {
+            if (board[index] !== "" || !gameActive || !isPlayerTurn) return;
+
+            placeMark(cell, index, "X", "x-mark");
+            
+            if (!checkWinner()) {
+                isPlayerTurn = false;
+                statusDisplay.innerText = "Computer soch raha hai... 🤔";
+                setTimeout(computerMove, 600); 
+            }
+        }
+
+        // --- NAYA SMART AI LOGIC ---
+        function computerMove() {
+            if (!gameActive) return;
+
+            let bestMove = -1;
+
+            // 1. Attack: Pehle dekho kya computer khud jeet sakta hai?
+            bestMove = findBestMove("O");
+
+            // 2. Defense: Agar computer nahi jeet raha, toh dekho kya aap (X) jeetne wale ho? Agar haan, toh block karo.
+            if (bestMove === -1) {
+                bestMove = findBestMove("X");
+            }
+
+            // 3. Center: Agar block bhi nahi karna aur jeet bhi nahi raha, toh beech wala (4) dabba le lo
+            if (bestMove === -1 && board[4] === "") {
+                bestMove = 4;
+            }
+
+            // 4. Random: Agar kuch aur nahi bacha toh koi bhi khali jagah le lo
+            if (bestMove === -1) {
+                let emptySpots = [];
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") emptySpots.push(i);
+                }
+                if (emptySpots.length > 0) {
+                    let randomIndex = Math.floor(Math.random() * emptySpots.length);
+                    bestMove = emptySpots[randomIndex];
+                }
+            }
+
+            // Computer ne apni chaal chal di
+            if (bestMove !== -1) {
+                let cell = document.querySelectorAll('.cell')[bestMove];
+                placeMark(cell, bestMove, "O", "o-mark");
+
+                if (!checkWinner()) {
+                    isPlayerTurn = true;
+                    statusDisplay.innerText = "Aapki baari (X)";
+                }
+            }
+        }
+
+        // Yeh function check karta hai ki kya koi 2 dabbe bhare hain aur 1 khali hai
+        function findBestMove(playerSymbol) {
+            for (let i = 0; i < winConditions.length; i++) {
+                const [a, b, c] = winConditions[i];
+                
+                if (board[a] === playerSymbol && board[b] === playerSymbol && board[c] === "") return c;
+                if (board[a] === playerSymbol && board[c] === playerSymbol && board[b] === "") return b;
+                if (board[b] === playerSymbol && board[c] === playerSymbol && board[a] === "") return a;
+            }
+            return -1;
+        }
+        // ---------------------------
+
+        function placeMark(cell, index, player, colorClass) {
+            board[index] = player;
+            cell.innerText = player;
+            cell.classList.add(colorClass);
+        }
+
+        function checkWinner() {
+            let roundWon = false;
+            let winningPlayer = "";
+
+            for (let i = 0; i < winConditions.length; i++) {
+                const [a, b, c] = winConditions[i];
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    roundWon = true;
+                    winningPlayer = board[a];
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                if (winningPlayer === "X") {
+                    statusDisplay.innerText = "Badhai ho! Aap Jeet Gaye! 🎉";
+                    statusDisplay.style.color = "#006400"; 
+                } else {
+                    statusDisplay.innerText = "Oops! Computer Jeet Gaya! 🤖";
+                    statusDisplay.style.color = "#cc0000"; 
+                }
+                gameActive = false;
+                return true;
+            }
+
+            if (!board.includes("")) {
+                statusDisplay.innerText = "Game Draw ho gaya! 🤝";
+                statusDisplay.style.color = "#ffffff"; 
+                gameActive = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        function resetGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            isPlayerTurn = true;
+            gameActive = true;
+            statusDisplay.innerText = "Aapki baari (X)";
+            statusDisplay.style.color = "#333";
+            
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove('x-mark', 'o-mark');
+            });
+        }
+    </script>
+</body>
+</html>
