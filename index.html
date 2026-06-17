@@ -3,86 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Tic-Tac-Toe Smart AI</title>
+    <title>Cyber Tic-Tac-Toe | Midnight Blue Mode</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background-color: #ff8c00; 
-            color: #222; 
-            font-family: 'Arial', sans-serif;
+            background-color: #0b192c; /* Premium Midnight Blue */
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            /* Halki si cyan grid lines */
+            background-image: 
+                linear-gradient(rgba(0, 255, 204, 0.04) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(0, 255, 204, 0.04) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
-        h1 { margin-bottom: 5px; font-size: 3em; }
-        .status { font-size: 1.5em; margin-bottom: 20px; font-weight: bold; color: #333; }
-        
+
+        /* Crackers Canvas */
+        #crackerCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #f8fafc;
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+            margin-bottom: 5px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .status {
+            font-size: 1.2em;
+            color: #00ffcc;
+            margin-bottom: 25px;
+            font-weight: bold;
+            background: #112240; /* Darker blue dabba */
+            padding: 8px 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid #1e3a5f;
+        }
+
+        /* Game Board */
         .board {
             display: grid;
             grid-template-columns: repeat(3, 100px);
-            grid-gap: 5px;
+            grid-template-rows: repeat(3, 100px);
+            gap: 12px;
+            background-color: #112240; /* Board background */
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border: 2px solid #1e3a5f;
         }
-        
+
         .cell {
-            width: 100px;
-            height: 100px;
-            background-color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4em;
-            font-weight: bold;
-            cursor: pointer;
+            background-color: #1e3a5f; /* Light blue cells */
+            border: 2px solid #2a4b7c;
             border-radius: 10px;
-            transition: background-color 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .cell:hover { background-color: #444; }
-        
-        .x-mark { color: cyan; }
-        .o-mark { color: yellow; }
-        
-        button {
-            margin-top: 30px;
-            padding: 12px 24px;
-            font-size: 1.2em;
-            cursor: pointer;
-            background-color: #222;
-            color: white;
-            border: none;
-            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.5em;
             font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        button:hover { background-color: #444; }
+
+        .cell:hover {
+            background-color: #2a4b7c;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-color: #00ffcc;
+        }
+
+        /* X aur O ke Colors (Blue theme par neon mast lagta hai) */
+        .cell.x-glow { color: #00ffcc; text-shadow: 0 0 15px #00ffcc; }
+        .cell.o-glow { color: #ff007f; text-shadow: 0 0 15px #ff007f; }
+
+        /* Ludo Style Central Popup */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(11, 25, 44, 0.85); /* Blue tinted glass */
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .victory-card {
+            background: linear-gradient(135deg, #112240, #1e3a5f);
+            box-shadow: 0 20px 50px rgba(0, 255, 204, 0.15);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            transform: scale(0.7);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90%;
+            width: 400px;
+            border: 2px solid #00ffcc;
+        }
+
+        .overlay.show .victory-card {
+            transform: scale(1);
+        }
+
+        .victory-card h2 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 0 10px #00ffcc;
+        }
+
+        .victory-card p {
+            font-size: 1.1em;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #0b192c;
+            background-color: #00ffcc;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 255, 204, 0.25);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0, 255, 204, 0.4);
+            background-color: #33ffdb;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Tic-Tac-Toe</h1>
-    <div class="status" id="status">Aapki baari (X)</div>
-    
+    <canvas id="crackerCanvas"></canvas>
+
+    <h1>TIC-TAC-TOE</h1>
+    <div class="status" id="statusText">Player X's Turn</div>
+
     <div class="board" id="board">
-        <div class="cell" onclick="playerMove(this, 0)"></div>
-        <div class="cell" onclick="playerMove(this, 1)"></div>
-        <div class="cell" onclick="playerMove(this, 2)"></div>
-        <div class="cell" onclick="playerMove(this, 3)"></div>
-        <div class="cell" onclick="playerMove(this, 4)"></div>
-        <div class="cell" onclick="playerMove(this, 5)"></div>
-        <div class="cell" onclick="playerMove(this, 6)"></div>
-        <div class="cell" onclick="playerMove(this, 7)"></div>
-        <div class="cell" onclick="playerMove(this, 8)"></div>
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
     </div>
 
-    <button onclick="resetGame()">Game Reset Karein</button>
+    <div class="overlay" id="victoryOverlay">
+        <div class="victory-card">
+            <h2 id="winnerTitle">X WINS!</h2>
+            <p id="winnerSub">Flawless Victory.</p>
+            <button class="btn" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
 
     <script>
-        let board = ["", "", "", "", "", "", "", "", ""];
-        let isPlayerTurn = true; 
-        let gameActive = true;
-        const statusDisplay = document.getElementById('status');
+        const boardElement = document.getElementById('board');
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('statusText');
+        const victoryOverlay = document.getElementById('victoryOverlay');
+        const winnerTitle = document.getElementById('winnerTitle');
+        const winnerSub = document.getElementById('winnerSub');
+        const canvas = document.getElementById('crackerCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let isGameActive = true;
+        let animationId;
 
         const winConditions = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -90,126 +212,153 @@
             [0, 4, 8], [2, 4, 6]
         ];
 
-        function playerMove(cell, index) {
-            if (board[index] !== "" || !gameActive || !isPlayerTurn) return;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-            placeMark(cell, index, "X", "x-mark");
-            
-            if (!checkWinner()) {
-                isPlayerTurn = false;
-                statusDisplay.innerText = "Computer soch raha hai... 🤔";
-                setTimeout(computerMove, 600); 
+        // --- Neon Crackers adjusted for Blue Theme ---
+        let particles = [];
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 4 + 2; 
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 12, 
+                    y: (Math.random() - 0.5) * 12
+                };
+                this.alpha = 1;
+                this.decay = Math.random() * 0.01 + 0.01; 
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.velocity.y += 0.08; 
+                this.alpha -= this.decay;
             }
         }
 
-        // --- NAYA SMART AI LOGIC ---
-        function computerMove() {
-            if (!gameActive) return;
-
-            let bestMove = -1;
-
-            // 1. Attack: Pehle dekho kya computer khud jeet sakta hai?
-            bestMove = findBestMove("O");
-
-            // 2. Defense: Agar computer nahi jeet raha, toh dekho kya aap (X) jeetne wale ho? Agar haan, toh block karo.
-            if (bestMove === -1) {
-                bestMove = findBestMove("X");
-            }
-
-            // 3. Center: Agar block bhi nahi karna aur jeet bhi nahi raha, toh beech wala (4) dabba le lo
-            if (bestMove === -1 && board[4] === "") {
-                bestMove = 4;
-            }
-
-            // 4. Random: Agar kuch aur nahi bacha toh koi bhi khali jagah le lo
-            if (bestMove === -1) {
-                let emptySpots = [];
-                for (let i = 0; i < 9; i++) {
-                    if (board[i] === "") emptySpots.push(i);
-                }
-                if (emptySpots.length > 0) {
-                    let randomIndex = Math.floor(Math.random() * emptySpots.length);
-                    bestMove = emptySpots[randomIndex];
-                }
-            }
-
-            // Computer ne apni chaal chal di
-            if (bestMove !== -1) {
-                let cell = document.querySelectorAll('.cell')[bestMove];
-                placeMark(cell, bestMove, "O", "o-mark");
-
-                if (!checkWinner()) {
-                    isPlayerTurn = true;
-                    statusDisplay.innerText = "Aapki baari (X)";
-                }
-            }
-        }
-
-        // Yeh function check karta hai ki kya koi 2 dabbe bhare hain aur 1 khali hai
-        function findBestMove(playerSymbol) {
-            for (let i = 0; i < winConditions.length; i++) {
-                const [a, b, c] = winConditions[i];
+        function createFirework() {
+            if (!isGameActive && winnerTitle.innerText !== "DRAW!") {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * (canvas.height * 0.5) + (canvas.height * 0.1);
                 
-                if (board[a] === playerSymbol && board[b] === playerSymbol && board[c] === "") return c;
-                if (board[a] === playerSymbol && board[c] === playerSymbol && board[b] === "") return b;
-                if (board[b] === playerSymbol && board[c] === playerSymbol && board[a] === "") return a;
+                const colors = ['#00ffcc', '#ff007f', '#00ffff', '#ff00ff', '#ffff00', '#00ff00', '#ff3300'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                for (let i = 0; i < 50; i++) { 
+                    particles.push(new Particle(x, y, randomColor));
+                }
             }
-            return -1;
-        }
-        // ---------------------------
-
-        function placeMark(cell, index, player, colorClass) {
-            board[index] = player;
-            cell.innerText = player;
-            cell.classList.add(colorClass);
         }
 
-        function checkWinner() {
+        function animateCrackers() {
+            // Background clearing code matched with Midnight Blue
+            ctx.fillStyle = 'rgba(11, 25, 44, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.globalCompositeOperation = 'screen';
+            
+            particles.forEach((particle, index) => {
+                if (particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                } else {
+                    particle.update();
+                    particle.draw();
+                }
+            });
+
+            ctx.globalCompositeOperation = 'source-over';
+
+            if (Math.random() < 0.08) createFirework();
+
+            animationId = requestAnimationFrame(animateCrackers);
+        }
+
+        // --- Game Click Handlers ---
+        cells.forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const index = e.target.getAttribute('data-index');
+                if (board[index] !== '' || !isGameActive) return;
+
+                board[index] = currentPlayer;
+                e.target.innerText = currentPlayer;
+                e.target.classList.add(currentPlayer === 'X' ? 'x-glow' : 'o-glow');
+
+                checkResult();
+            });
+        });
+
+        function checkResult() {
             let roundWon = false;
-            let winningPlayer = "";
-
             for (let i = 0; i < winConditions.length; i++) {
                 const [a, b, c] = winConditions[i];
                 if (board[a] && board[a] === board[b] && board[a] === board[c]) {
                     roundWon = true;
-                    winningPlayer = board[a];
                     break;
                 }
             }
 
             if (roundWon) {
-                if (winningPlayer === "X") {
-                    statusDisplay.innerText = "Badhai ho! Aap Jeet Gaye! 🎉";
-                    statusDisplay.style.color = "#006400"; 
-                } else {
-                    statusDisplay.innerText = "Oops! Computer Jeet Gaya! 🤖";
-                    statusDisplay.style.color = "#cc0000"; 
-                }
-                gameActive = false;
-                return true;
+                isGameActive = false;
+                winnerTitle.innerText = `${currentPlayer} WINS!`;
+                winnerTitle.style.color = currentPlayer === 'X' ? '#00ffcc' : '#ff007f';
+                victoryOverlay.style.borderColor = currentPlayer === 'X' ? '#00ffcc' : '#ff007f';
+                victoryOverlay.style.boxShadow = currentPlayer === 'X' ? '0 0 40px #00ffcc' : '0 0 40px #ff007f';
+                winnerSub.innerText = `Congratulations Player ${currentPlayer}! You absolutely dominated this round.`;
+                
+                victoryOverlay.classList.add('show');
+                animateCrackers(); 
+                return;
             }
 
-            if (!board.includes("")) {
-                statusDisplay.innerText = "Game Draw ho gaya! 🤝";
-                statusDisplay.style.color = "#ffffff"; 
-                gameActive = false;
-                return true;
+            if (!board.includes('')) {
+                isGameActive = false;
+                winnerTitle.innerText = "DRAW!";
+                winnerTitle.style.color = "#fff";
+                victoryOverlay.style.borderColor = "#94a3b8";
+                victoryOverlay.style.boxShadow = "0 0 20px #94a3b8";
+                winnerSub.innerText = "Solid defense from both sides!";
+                victoryOverlay.classList.add('show');
+                return;
             }
 
-            return false;
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            statusText.innerText = `Player ${currentPlayer}'s Turn`;
+            statusText.style.color = currentPlayer === 'X' ? '#00ffcc' : '#ff007f';
         }
 
         function resetGame() {
-            board = ["", "", "", "", "", "", "", "", ""];
-            isPlayerTurn = true;
-            gameActive = true;
-            statusDisplay.innerText = "Aapki baari (X)";
-            statusDisplay.style.color = "#333";
+            board = ['', '', '', '', '', '', '', '', ''];
+            isGameActive = true;
+            currentPlayer = 'X';
+            statusText.innerText = "Player X's Turn";
+            statusText.style.color = '#00ffcc';
+            victoryOverlay.classList.remove('show');
             
-            document.querySelectorAll('.cell').forEach(cell => {
-                cell.innerText = "";
-                cell.classList.remove('x-mark', 'o-mark');
+            cells.forEach(cell => {
+                cell.innerText = '';
+                cell.classList.remove('x-glow', 'o-glow');
             });
+
+            cancelAnimationFrame(animationId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = [];
         }
     </script>
 </body>
